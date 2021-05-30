@@ -10,11 +10,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        submodules: true
+        submodules: recursive
     - name: Install Protoc
       uses: arduino/setup-protoc@v1
-    - name: Install LittleFS
-      uses: joltwallet/esp_littlefs@master
     - name: Cache build
       id: cache-build
       uses: actions/cache@v1
