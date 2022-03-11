@@ -4,7 +4,7 @@
 [![Certification](https://badgen.net/badge/Sasin/stole%2070%20mln%20PLN)](https://github.com/feelfreelinux/cspot)
 
 <p align="center">
-<img src=".github/trombka_dark.png#gh-light-mode-only" width="32%" />
+<img src=".github/trombka_light.png#gh-light-mode-only" width="32%" />
 </p>
 
 <p align="center">
