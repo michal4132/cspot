@@ -109,7 +109,6 @@ std::shared_ptr<AudioChunk> MercuryManager::fetchAudioChunk(std::vector<uint8_t>
     buffer.insert(buffer.end(), fileId.begin(), fileId.end());
     buffer.insert(buffer.end(), sampleStartBytes.begin(), sampleStartBytes.end());
     buffer.insert(buffer.end(), sampleEndBytes.begin(), sampleEndBytes.end());
-
     // Bump chunk sequence
     this->audioChunkSequence += 1;
     this->session->shanConn->sendPacket(static_cast<uint8_t>(MercuryType::AUDIO_CHUNK_REQUEST_COMMAND), buffer);
@@ -208,16 +207,18 @@ void MercuryManager::updateQueue() {
     if (queueSemaphore->twait() == 0) {
         if (this->queue.size() > 0)
         {
-            auto packet = std::move(this->queue[0]);
+            std::unique_ptr<Packet> packet = std::move(this->queue[0]);
             this->queue.erase(this->queue.begin());
+            if(packet == nullptr){
+                return;
+            }
             CSPOT_LOG(debug, "Received packet with code %d of length %d", packet->command, packet->data.size());
             switch (static_cast<MercuryType>(packet->command))
             {
             case MercuryType::COUNTRY_CODE_RESPONSE:
             {
-
-                countryCode = std::string(packet->data.begin(), packet->data.end());
-                CSPOT_LOG(debug, "Received country code: %s", countryCode.c_str());
+                memcpy(countryCode, packet->data.data(), 2);
+                CSPOT_LOG(debug, "Received country code: %.2s", countryCode);
                 break;
             }
             case MercuryType::AUDIO_KEY_FAILURE_RESPONSE:

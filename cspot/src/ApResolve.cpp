@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <iostream>
 #include <ctype.h>
 #include <cstring>
 #include <stdlib.h>
@@ -11,13 +10,13 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <iostream>
 #include <sstream>
 #include <fstream>
 #include "Logger.h"
 #include <cJSON.h>
 #include <ConfigJSON.h>
 #include <random>
-#include <iostream>
 
 ApResolve::ApResolve() {}
 

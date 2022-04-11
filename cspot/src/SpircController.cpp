@@ -139,10 +139,12 @@ void SpircController::handleFrame(std::vector<uint8_t> &data) {
         break;
     case MessageType_kMessageTypeNext:
         sendEvent(CSpotEventType::NEXT);
+//         this->player->cancelCurrentTrack(); //TODO
         nextSong();
         break;
     case MessageType_kMessageTypePrev:
         sendEvent(CSpotEventType::PREV);
+//         this->manager->audioChunkManager->chunks.clear();
         prevSong();
         break;
     case MessageType_kMessageTypeLoad: {

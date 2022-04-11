@@ -52,7 +52,8 @@ void Player::feedPCM(uint8_t *data, size_t len)
         int16_t* psample;
         uint32_t pmax;
         psample = (int16_t*)(data);
-        for (int32_t i = 0; i < (len / 2); i++)
+        size_t half_len = len / 2;
+        for (int32_t i = 0; i < half_len; i++)
         {
             int32_t temp;
             // Offset data for unsigned sinks
@@ -71,6 +72,24 @@ void Player::feedPCM(uint8_t *data, size_t len)
     this->audioSink->feedPCMFrames(data, len);
 }
 
+bool Player::isLoadedTrackInQueue()
+{
+    std::shared_ptr<SpotifyTrack> tmpTrack;
+    int trackNum = -1;
+    for(uint8_t i = 0; i < this->trackQueue.size(); ++i)
+    {
+        if(this->trackQueue.pop(tmpTrack))
+        {
+            if(trackNum < 0 && tmpTrack->loaded)
+            {
+                trackNum = i;
+            }
+            this->trackQueue.push(tmpTrack);
+        }
+    }
+    return (trackNum >= 0);
+}
+
 void Player::runTask()
 {
     uint8_t *pcmOut = (uint8_t *) malloc(4096 / 4);
@@ -78,12 +97,32 @@ void Player::runTask()
     this->isRunning = true;
     while (isRunning)
     {
-        if (this->trackQueue.wpop(currentTrack)) {
-            currentTrack->audioStream->startPlaybackLoop(pcmOut, 4096 / 4);
-            currentTrack->loadedTrackCallback = nullptr;
-            currentTrack->audioStream->streamFinishedCallback = nullptr;
-            currentTrack->audioStream->audioSink = nullptr;
-            currentTrack->audioStream->pcmCallback = nullptr;
+        if (this->trackQueue.wpop(currentTrack))
+        {
+            if(currentTrack->loaded)
+            {
+                auto tmp1 = this->trackQueue.size();
+                CSPOT_LOG(info, "------------CURRENT TRACK LOADED, play, size: %d", tmp1);
+                currentTrack->audioStream->startPlaybackLoop(pcmOut, 4096 / 4);
+                currentTrack->loadedTrackCallback = nullptr;
+                currentTrack->audioStream->streamFinishedCallback = nullptr;
+                currentTrack->audioStream->audioSink = nullptr;
+                currentTrack->audioStream->pcmCallback = nullptr;
+            }
+            else if(!isLoadedTrackInQueue())
+            {
+                auto tmp1 = this->trackQueue.size();
+                CSPOT_LOG(info, "------------NO LOADED TRACK IN QUEUE, keep, size: %d", tmp1);
+                this->trackQueue.push(currentTrack);
+                usleep(100 * 1000);
+            }
+            else
+            {
+                auto tmp1 = this->trackQueue.size();
+                CSPOT_LOG(info, "------------LOADED TRACK IN QUEUE, stash, size: %d", tmp1);
+                currentTrack->trackInfoReceived = nullptr;
+                currentTrack->loadedTrackCallback = nullptr;
+            }
         } else {
             usleep(100);
         }
@@ -130,6 +169,7 @@ void Player::handleLoad(std::shared_ptr<TrackReference> trackReference, std::fun
         track->audioStream->streamFinishedCallback = this->endOfFileCallback;
         track->audioStream->audioSink = this->audioSink;
         track->audioStream->pcmCallback = framesCallback;
-        this->trackQueue.push(track);
+        track->loaded = true;
     };
+    this->trackQueue.push(track);
 }

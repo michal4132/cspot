@@ -52,6 +52,7 @@ void AudioChunkManager::runTask() {
     std::pair<std::vector<uint8_t>, bool> audioPair;
     while (isRunning) {
         if (this->audioChunkDataQueue.wtpop(audioPair, 100)) {
+
             std::scoped_lock lock(this->chunkMutex);
             auto data = audioPair.first;
             auto failed = audioPair.second;
@@ -64,6 +65,7 @@ void AudioChunkManager::runTask() {
                                    return chunk.use_count() == 1;
                                }),
                 chunks.end());
+
 
             try {
                 for (auto const &chunk : this->chunks) {

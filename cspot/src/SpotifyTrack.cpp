@@ -33,17 +33,20 @@ SpotifyTrack::SpotifyTrack(std::shared_ptr<MercuryManager> manager, std::shared_
 
 SpotifyTrack::~SpotifyTrack()
 {
+    CSPOT_LOG(debug, "-----Before Destr----- MEM: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
     this->manager->unregisterMercuryCallback(this->reqSeqNum);
     this->manager->freeAudioKeyCallback();
     pb_release(Track_fields, &this->trackInfo);
     pb_release(Episode_fields, &this->episodeInfo);
+    CSPOT_LOG(debug, "-----After Destr----- MEM: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
 }
 
-bool SpotifyTrack::countryListContains(std::string countryList, std::string country)
+bool SpotifyTrack::countryListContains(char *countryList, char *country)
 {
-    for (int x = 0; x < countryList.size(); x += 2)
+    uint16_t countryList_length = strlen(countryList);
+    for (int x = 0; x < countryList_length; x += 2)
     {
-        if (countryList.substr(x, 2) == country)
+        if (countryList[x] == country[0] && countryList[x + 1] == country[1])
         {
             return true;
         }
@@ -59,12 +62,12 @@ bool SpotifyTrack::canPlayTrack(int altIndex)
         {
             if (trackInfo.restriction[x].countries_allowed != nullptr)
             {
-                return countryListContains(std::string(trackInfo.restriction[x].countries_allowed), manager->countryCode);
+                return countryListContains(trackInfo.restriction[x].countries_allowed, manager->countryCode);
             }
 
             if (trackInfo.restriction[x].countries_forbidden != nullptr)
             {
-                return !countryListContains(std::string(trackInfo.restriction[x].countries_forbidden), manager->countryCode);
+                return !countryListContains(trackInfo.restriction[x].countries_forbidden, manager->countryCode);
             }
         }
     }
@@ -74,12 +77,12 @@ bool SpotifyTrack::canPlayTrack(int altIndex)
         {
             if (trackInfo.alternative[altIndex].restriction[x].countries_allowed != nullptr)
             {
-                return countryListContains(std::string(trackInfo.alternative[altIndex].restriction[x].countries_allowed), manager->countryCode);
+                return countryListContains(trackInfo.alternative[altIndex].restriction[x].countries_allowed, manager->countryCode);
             }
 
             if (trackInfo.alternative[altIndex].restriction[x].countries_forbidden != nullptr)
             {
-                return !countryListContains(std::string(trackInfo.alternative[altIndex].restriction[x].countries_forbidden), manager->countryCode);
+                return !countryListContains(trackInfo.alternative[altIndex].restriction[x].countries_forbidden, manager->countryCode);
             }
         }
     }
@@ -209,6 +212,7 @@ void SpotifyTrack::requestAudioKey(std::vector<uint8_t> fileId, std::vector<uint
             {
                 this->audioStream = std::make_unique<ChunkedAudioStream>(this->fileId, audioKey, trackDuration, this->manager, position_ms, isPaused);
                 loadedTrackCallback();
+//                 this->loaded = true;
             }
             else
             {

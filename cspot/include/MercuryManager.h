@@ -63,7 +63,7 @@ private:
   std::mutex stopMutex;
   std::map<std::string, mercuryCallback> subscriptions;
   std::unique_ptr<Session> session;
-  std::shared_ptr<LoginBlob> lastAuthBlob; 
+  std::shared_ptr<LoginBlob> lastAuthBlob;
   std::unique_ptr<AudioChunkManager> audioChunkManager;
   std::vector<std::unique_ptr<Packet>> queue;
   std::unique_ptr<WrappedSemaphore> queueSemaphore;
@@ -81,7 +81,7 @@ public:
   voidCallback reconnectedCallback;
   uint16_t audioChunkSequence;
   std::shared_ptr<TimeProvider> timeProvider;
-  std::string countryCode;
+  char countryCode[2];
 
   bool timeoutHandler();
   uint64_t execute(MercuryType method, std::string uri, mercuryCallback &callback, mercuryCallback &subscription, mercuryParts &payload);

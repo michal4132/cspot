@@ -25,6 +25,7 @@ private:
     std::mutex loadTrackMutex;
     // @TODO: Use some actual structure here
     bell::Queue<std::shared_ptr<SpotifyTrack>> trackQueue;
+    bool isLoadedTrackInQueue();
     void runTask();
 
 public:
